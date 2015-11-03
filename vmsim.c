@@ -8,6 +8,8 @@ int num_frames;
 int alg;
 int num_refrences;
 
+
+
 int loc_in_mem(int mem[], int address);
 int set_dirty (int mem[], int loc    );
 int is_dirty  (int mem[], int loc    );
@@ -16,14 +18,14 @@ int set_R     (int mem[], int loc    );
 int unset_R   (int mem[], int loc    );
 int get_R     (int mem[], int loc    );
 
-int opt_alg   (int mem[], int ref[]); //TODO
-int nru_alg   (int mem[], int ref[]); //TODO
-int clock_alg (int mem[], int ref[]); //TODO
-int work_alg  (int mem[], int ref[]); //TODO
+int opt_alg   (int mem[], FILE * file); //TODO
+int nru_alg   (int mem[], FILE * file); //TODO
+int clock_alg (int mem[], FILE * file); //TODO
+int work_alg  (int mem[], FILE * file); //TODO
 
-int next_ref  (int mem[], int ref[]); //TODO
+int ff_used   (int mem[], FILE * file); //TODO
 
-int[] refrences(FILE *);              //TODO
+
 
 
 void help();
@@ -154,3 +156,4 @@ int get_R(int mem[], int loc){
 void help(){
   printf("usage: ./vmsim –n <numframes> -a <opt|clock|nru|work> [-r <refresh>] [-t <tau>] <tracefile>\n");
 }
+
