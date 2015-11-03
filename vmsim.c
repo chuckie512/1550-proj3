@@ -6,19 +6,25 @@
 
 int num_frames;
 int alg;
+int num_refrences;
 
 int loc_in_mem(int mem[], int address);
 int set_dirty (int mem[], int loc    );
 int is_dirty  (int mem[], int loc    );
-int replace   (int mem[], int loc,    int address);
+int replace   (int mem[], int loc,    int address); //TODO add more tests
 int set_R     (int mem[], int loc    );
 int unset_R   (int mem[], int loc    );
 int get_R     (int mem[], int loc    );
 
-int opt_alg   (int mem[], FILE* trace);
-int nru_alg   (int mem[], FILE* trace);
-int clock_alg (int mem[], FILE* trace);
-int work_alg  (int mem[], FILE* trace);
+int opt_alg   (int mem[], int ref[]); //TODO
+int nru_alg   (int mem[], int ref[]); //TODO
+int clock_alg (int mem[], int ref[]); //TODO
+int work_alg  (int mem[], int ref[]); //TODO
+
+int next_ref  (int mem[], int ref[]); //TODO
+
+int[] refrences(FILE *);              //TODO
+
 
 void help();
 
