@@ -10,6 +10,15 @@ int alg;
 int loc_in_mem(int mem[], int address);
 int set_dirty (int mem[], int loc    );
 int is_dirty  (int mem[], int loc    );
+int replace   (int mem[], int loc,    int address);
+int set_R     (int mem[], int loc    );
+int unset_R   (int mem[], int loc    );
+
+int opt_alg   (int mem[], FILE* trace);
+int nru_alg   (int mem[], FILE* trace);
+int clock_alg (int mem[], FILE* trace);
+int work_alg  (int mem[], FILE* trace);
+
 
 int main(int argc, char ** argv){
   num_frames=1;
@@ -52,4 +61,20 @@ int set_dirty(int mem[], int loc){
 
 int is_dirty(int mem[], int loc){
   return mem[loc]&=1;
+}
+
+int replace(int mem[], int loc, int address){
+  mem[loc] = ((address>>OFFSET)<<OFFSET); 
+  set_R(mem, loc);
+  return 0;
+}
+
+int set_R(int mem[], int loc){
+  mem[loc]|=2;  //second to last bit is 1
+  return 0;
+}
+
+int unset_R(int mem[], int loc){
+  mem[loc]&=0xFFFFFFFD; //second to last bit is 0
+  return 0;
 }
