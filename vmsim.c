@@ -19,19 +19,45 @@ int nru_alg   (int mem[], FILE* trace);
 int clock_alg (int mem[], FILE* trace);
 int work_alg  (int mem[], FILE* trace);
 
+int test(int mem[]){
+  int status=0;
+
+
+  replace(mem, 0, 0xFFCDFFFD);
+  set_dirty(mem, 0);
+  int loc = loc_in_mem(mem, 0xFFCDFFFF);
+
+  if(loc != 0){
+    printf("TEST[0]: FAIL loc in mem is not returning the correct value, loc is %d when it should be 0\n", loc);
+    status-=1;
+  }
+  else{
+   printf("TEST[0]: PASSED\n");
+  }
+  if(is_dirty(mem, 0)!=1){
+    printf("TEST[1]: FAIL a page that should be dirty is being returned as clean\n");
+    status -=1;
+  }
+  else{
+   printf("TEST[1]: PASSED\n");
+  }
+
+
+}
+
 
 int main(int argc, char ** argv){
   num_frames=1;
 
   int mem[num_frames]; 
-  
+  int exit = test(mem);
   
   
   
 
 
 
-  return 0;
+  return exit;
 }
 
 /**
