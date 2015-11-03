@@ -8,8 +8,8 @@ int num_frames;
 int alg;
 
 int loc_in_mem(int mem[], int address);
-int set_dirty(int mem, int loc);
-
+int set_dirty (int mem[], int loc    );
+int is_dirty  (int mem[], int loc    );
 
 int main(int argc, char ** argv){
   num_frames=1;
@@ -50,4 +50,6 @@ int set_dirty(int mem[], int loc){
   return 0;
 }
 
-
+int is_dirty(int mem[], int loc){
+  return mem[loc]&=1;
+}
