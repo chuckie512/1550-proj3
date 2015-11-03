@@ -20,6 +20,8 @@ int nru_alg   (int mem[], FILE* trace);
 int clock_alg (int mem[], FILE* trace);
 int work_alg  (int mem[], FILE* trace);
 
+void help();
+
 int test(int mem[]){
   int status=0;
 
@@ -141,4 +143,8 @@ int unset_R(int mem[], int loc){
 
 int get_R(int mem[], int loc){
   return (mem[loc]&2)>>1;
+}
+
+void help(){
+  printf("usage: ./vmsim –n <numframes> -a <opt|clock|nru|work> [-r <refresh>] [-t <tau>] <tracefile>\n");
 }
