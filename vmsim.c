@@ -64,6 +64,7 @@ int test(int mem[]){
    printf("TEST[1]:  PASSED\n");
   }
   
+  set_R(mem,0);  
   if(get_R(mem, 0) !=1){
     printf("TEST[2]: FAIL a R bit that should be 1 is %d\n", get_R(mem,0));
     printf("mem[0]: %x\n",mem[0]);
@@ -135,7 +136,6 @@ int is_dirty(int mem[], int loc){
 
 int replace(int mem[], int loc, int address){
   mem[loc] = ((address>>OFFSET)<<OFFSET); //last 12 don't matter
-  set_R(mem, loc);
   return 0;
 }
 
@@ -175,6 +175,7 @@ int clock_alg(int mem[], FILE *){
     if(mode == 'w'){
       set_dirty(mem, loc);
     }
+    set_R(mem, loc);
   }
 }
 
