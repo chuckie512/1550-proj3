@@ -157,3 +157,24 @@ void help(){
   printf("usage: ./vmsim –n <numframes> -a <opt|clock|nru|work> [-r <refresh>] [-t <tau>] <tracefile>\n");
 }
 
+
+int clock_alg(int mem[], FILE *){
+  int address;
+  char mode;
+
+  while(1){
+    int status = fscanf(file, "%x %c", &address, &mode); //read the file
+    if(status<2){  //if we didn't get everything, we're done
+      break;
+    }
+    int loc = loc_in_mem(mem, address);
+    if(loc == -1){
+      //here is where we actually put it into memory, b/c it's not there
+      //make sure loc is set when done
+    }
+    if(mode == 'w'){
+      set_dirty(mem, loc);
+    }
+  }
+}
+
