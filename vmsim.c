@@ -25,10 +25,11 @@ int work_alg  (int mem[], FILE * file); //TODO
 
 int ff_used   (int mem[], FILE * file); //TODO
 
-
-
+void print_results(long accesses, long faults, long writes);
 
 void help();
+
+
 
 int test(int mem[]){
   int status=0;
@@ -92,10 +93,11 @@ int test(int mem[]){
 
 
 int main(int argc, char ** argv){
-  num_frames=1;
+  num_frames=10;
 
+  FILE* file = fopen("./gcc.trace", "r");
   int mem[num_frames]; 
-  int exit = test(mem);
+  int exit = clock_alg(mem,file);
   
   
   
@@ -162,20 +164,75 @@ int clock_alg(int mem[], FILE * file){
   int address;
   char mode;
 
+  long faults   = 0;
+  long accesses = 0;
+  long writes   = 0;
+
+  int clock_hand=0;
+
   while(1){
     int status = fscanf(file, "%x %c", &address, &mode); //read the file
     if(status<2){  //if we didn't get everything, we're done
       break;
     }
+
+    accesses++;
+    
     int loc = loc_in_mem(mem, address);
     if(loc == -1){
       //here is where we actually put it into memory, b/c it's not there
-      //make sure loc is set when done
+      faults++;
+      printf("page fault - ");
+      //TODO log a no-evict fault as no evict not clean
+      //find the evicatable page
+      int R = get_R(mem, clock_hand);
+      while(R==1){
+        unset_R(mem, clock_hand);
+        clock_hand++;
+        R = get_R(mem, clock_hand);
+      }
+      //clock_hand now points to an evictable page
+      
+      
+      if(is_dirty(mem, clock_hand)==1){//we have to write to disk
+        printf("evict dirty\n");
+        writes++;
+      }
+      else{ //it's clean
+        printf("evict clean\n");
+      }
+
+      replace(mem, clock_hand, address);
+     
+      loc=clock_hand;
+      clock_hand++;
+    }
+    else{
+      printf("hit\n");
     }
     if(mode == 'w'){
       set_dirty(mem, loc);
     }
     set_R(mem, loc);
   }
+
+  print_results(accesses, faults, writes);
+  
+  return 0;
 }
 
+
+void print_results(long accesses, long faults, long writes){
+  
+  printf("\n");
+  printf("\n");
+  printf("================================================\n");
+  printf("                   results                      \n");
+  printf("================================================\n");
+  printf("Number of frames:      %d \n", num_frames);
+  printf("Total memory accesses: %ld\n", accesses  );
+  printf("Total page faults:     %ld\n", faults    );
+  printf("Total writes to disk:  %ld\n", writes    );
+  printf("================================================\n");
+}
+  
