@@ -93,12 +93,15 @@ int test(int mem[]){
 
 
 int main(int argc, char ** argv){
-  num_frames=10;
+  num_frames=8;
 
   FILE* file = fopen("./gcc.trace", "r");
   int mem[num_frames]; 
+  int i;
+  for(i=0; i<num_frames; i++)
+    mem[i]=0;
   int exit = clock_alg(mem,file);
-  
+  //int exit = test(mem);
   
   
 
@@ -117,7 +120,7 @@ int loc_in_mem(int mem[], int address){
   int i;
   address= address >>OFFSET;  //shift away the offset, we don't want it
   for(i=0; i<num_frames; i++){
-    if(address = mem[i] >>OFFSET){
+    if(address == mem[i] >>OFFSET){
       found = i;
       break;
     }
@@ -189,6 +192,7 @@ int clock_alg(int mem[], FILE * file){
       while(R==1){
         unset_R(mem, clock_hand);
         clock_hand++;
+        clock_hand%=num_frames;
         R = get_R(mem, clock_hand);
       }
       //clock_hand now points to an evictable page
@@ -206,11 +210,12 @@ int clock_alg(int mem[], FILE * file){
      
       loc=clock_hand;
       clock_hand++;
+      clock_hand%=num_frames;
     }
     else{
       printf("hit\n");
     }
-    if(mode == 'w'){
+    if(mode == 'w'||mode=='W'){
       set_dirty(mem, loc);
     }
     set_R(mem, loc);
