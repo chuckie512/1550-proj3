@@ -158,7 +158,7 @@ void help(){
 }
 
 
-int clock_alg(int mem[], FILE *){
+int clock_alg(int mem[], FILE * file){
   int address;
   char mode;
 
