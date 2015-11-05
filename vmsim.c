@@ -6,7 +6,6 @@
 
 int num_frames;
 int alg;
-int num_refrences;
 
 
 
