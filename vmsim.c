@@ -2,7 +2,7 @@
 #include<stdlib.h>
 
 #define OFFSET 12
-
+#define MAX_PAGES 262143
 
 int num_frames;
 int alg;
@@ -30,8 +30,8 @@ void help();
 int test(int mem[]);
 
 struct llnode{
-struct llnode * next;
-long val;
+  struct llnode * next;
+  long val;
 };
 
 int add_llnode(struct llnode * root, int new_val);
