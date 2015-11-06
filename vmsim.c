@@ -2,7 +2,7 @@
 #include<stdlib.h>
 
 #define OFFSET 12
-#define MAX_PAGES 262143
+#define MAX_PAGES 262144
 
 int num_frames;
 int alg;
@@ -33,11 +33,11 @@ struct llnode{
   long val;
 };
 
-int add_llnode    (struct llnode * root, int new_val);
-int find_val_after(struct llnode * root, int cur_val);
+int add_llnode    (struct llnode * root, long new_val);
+int find_val_after(struct llnode * root, long cur_val);
 
-int add_reference (struct llnode * refs[]  , int address, int val);
-
+int add_reference (struct llnode * refs[]  , int address, long val);
+int fill_refs     (struct llnode * refs[]  , FILE * file);
 
 int test(int mem[]){
   int status=0;
@@ -302,7 +302,7 @@ void print_results(long accesses, long faults, long writes){
 }
  
 
-int add_llnode(struct llnode * root, int new_val){
+int add_llnode(struct llnode * root, long new_val){
 
   struct llnode * new_node = malloc(sizeof(struct llnode));
   if(new_node == NULL){
@@ -323,7 +323,7 @@ int add_llnode(struct llnode * root, int new_val){
   return 0;
 }
 
-int find_val_after(struct llnode * root, int cur_val){
+int find_val_after(struct llnode * root, long cur_val){
   if (root == NULL)
     return -1;
 
@@ -346,7 +346,7 @@ int find_val_after(struct llnode * root, int cur_val){
 }
 
 
-int add_reference (struct llnode * refs[]  , int address, int val){
+int add_reference (struct llnode * refs[]  , int address, long val){
 
   address =  address >> OFFSET;
 
@@ -358,5 +358,28 @@ int add_reference (struct llnode * refs[]  , int address, int val){
     return 0;
   }
   return add_llnode(refs[address], val);
+
+}
+
+
+int fill_refs     (struct llnode * refs[]  , FILE * file){
+  
+  int i;
+  for(i=0; i<MAX_PAGES; i++){
+    refs[i] = NULL;
+  }
+
+  long j=0;
+  
+  int addr;
+  char mode; 
+
+  while(fscanf(file, "%x %c", &addr, &mode)==2){
+    add_reference(refs, addr, j);
+    j++;
+  }
+
+  rewind(file);
+  return 0;
 
 }
