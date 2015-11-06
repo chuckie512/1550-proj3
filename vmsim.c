@@ -27,8 +27,15 @@ int ff_used   (int mem[], FILE * file); //TODO
 void print_results(long accesses, long faults, long writes);
 
 void help();
+int test(int mem[]);
 
+struct llnode{
+struct llnode * next;
+long val;
+};
 
+int add_llnode(struct llnode * root, int new_val);
+int find_val_after(struct llnode * root, int cur_val);
 
 int test(int mem[]){
   int status=0;
@@ -85,6 +92,33 @@ int test(int mem[]){
   }
 
 
+  struct llnode *test_root = malloc( sizeof(struct llnode) );
+  test_root->next = NULL;
+  test_root->val  = 0;
+  
+  add_llnode(test_root, 5  );
+  add_llnode(test_root, 6  );
+  add_llnode(test_root, 20 );
+  add_llnode(test_root, 200); 
+
+  if(find_val_after(test_root, 0) != 5){
+    printf("TEST[4]: FAIL the next val should be 5 but instead is %d\n", find_val_after(test_root, 0) );
+    status-=1;
+  }
+  else{
+    printf("TEST[4]:  PASSED\n");
+  }
+
+  if(find_val_after(test_root, 5) !=6 ){
+    printf("TEST[5]: FAIL the next val should be 6 but instead is %d\n", find_val_after(test_root, 5) );
+    status-=1;
+  }
+  else{
+    printf("TEST[5]:  PASSED\n");
+  }
+
+
+
   printf("===============================================\n");
   printf("ERRORS FOUND: %d\n",status*-1);
   return status;
@@ -99,8 +133,8 @@ int main(int argc, char ** argv){
   int i;
   for(i=0; i<num_frames; i++)
     mem[i]=0;
-  int exit = clock_alg(mem,file);
-  //int exit = test(mem);
+  //int exit = clock_alg(mem,file);
+  int exit = test(mem);
   
   
 
@@ -239,4 +273,47 @@ void print_results(long accesses, long faults, long writes){
   printf("Total writes to disk:  %ld\n", writes    );
   printf("================================================\n");
 }
+ 
+
+int add_llnode(struct llnode * root, int new_val){
+
+  struct llnode * new_node = malloc(sizeof(struct llnode));
+  if(new_node == NULL){
+    return -1;
+  }
+  new_node->val = new_val;
+  new_node->next = NULL;
+
+  struct llnode * temp;
+  temp = root;
+
+  while(temp->next != NULL){
+    temp = temp->next;
+  }
+
+  temp->next = new_node;
+
+  return 0;
+}
+
+int find_val_after(struct llnode * root, int cur_val){
+  if (root == NULL)
+    return -1;
+
+  struct llnode * temp;
+
+  temp = root;
   
+  if(temp->val > cur_val){
+    return temp->val;
+  }
+  
+  while(temp->next != NULL){
+    temp = temp->next;
+    if(temp->val > cur_val){
+      return temp->val;
+    }
+  }
+  return -1;
+
+}
