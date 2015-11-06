@@ -19,10 +19,9 @@ int get_R     (int mem[], int loc    );
 
 int opt_alg   (int mem[], FILE * file); //TODO
 int nru_alg   (int mem[], FILE * file); //TODO
-int clock_alg (int mem[], FILE * file); //TODO
+int clock_alg (int mem[], FILE * file); //TODO more prints
 int work_alg  (int mem[], FILE * file); //TODO
 
-int ff_used   (int mem[], FILE * file); //TODO
 
 void print_results(long accesses, long faults, long writes);
 
@@ -34,8 +33,11 @@ struct llnode{
   long val;
 };
 
-int add_llnode(struct llnode * root, int new_val);
+int add_llnode    (struct llnode * root, int new_val);
 int find_val_after(struct llnode * root, int cur_val);
+
+int add_reference (struct llnode * refs[]  , int address, int val);
+
 
 int test(int mem[]){
   int status=0;
@@ -115,6 +117,31 @@ int test(int mem[]){
   }
   else{
     printf("TEST[5]:  PASSED\n");
+  }
+  
+  
+  struct llnode * refs[1];
+  refs[0]=NULL;
+  add_reference(refs, 0 , 0  );
+  add_reference(refs, 0 , 5  );
+  add_reference(refs, 0 , 6  );
+  add_reference(refs, 0 , 20 );
+  add_reference(refs, 0 , 200);
+  
+if(find_val_after(refs[0], 0) != 5){
+    printf("TEST[6]: FAIL the next val should be 5 but instead is %d\n", find_val_after(test_root, 0) );
+    status-=1;
+  }
+  else{
+    printf("TEST[6]:  PASSED\n");
+  }
+
+  if(find_val_after(refs[0], 5) !=6 ){
+    printf("TEST[7]: FAIL the next val should be 6 but instead is %d\n", find_val_after(test_root, 5) );
+    status-=1;
+  }
+  else{
+    printf("TEST[7]:  PASSED\n");
   }
 
 
@@ -315,5 +342,21 @@ int find_val_after(struct llnode * root, int cur_val){
     }
   }
   return -1;
+
+}
+
+
+int add_reference (struct llnode * refs[]  , int address, int val){
+
+  address =  address >> OFFSET;
+
+  if(refs[address] == NULL){
+    struct llnode * new_node = malloc( sizeof(struct llnode) );
+    new_node->next = NULL;
+    new_node->val = val;
+    refs[address]=new_node;
+    return 0;
+  }
+  return add_llnode(refs[address], val);
 
 }
