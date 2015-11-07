@@ -1,9 +1,9 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<limits.h>
 
 #define OFFSET 12
-#define MAX_PAGES 262144
-
+#define MAX_PAGES 1048575
 int num_frames;
 int alg;
 
@@ -34,9 +34,9 @@ struct llnode{
 };
 
 int add_llnode    (struct llnode * root, long new_val);
-int find_val_after(struct llnode * root, long cur_val);
+long find_val_after(struct llnode * root, long cur_val);
 
-int add_reference (struct llnode * refs[]  , int address, long val);
+int add_reference (struct llnode * refs[]  ,unsigned int address, long val);
 int fill_refs     (struct llnode * refs[]  , FILE * file);
 
 int test(int mem[]){
@@ -161,8 +161,8 @@ int main(int argc, char ** argv){
   for(i=0; i<num_frames; i++)
     mem[i]=0;
   //int exit = clock_alg(mem,file);
-  int exit = test(mem);
-  
+  //int exit = test(mem);
+  int exit = opt_alg(mem, file);
   
 
 
@@ -306,6 +306,7 @@ int add_llnode(struct llnode * root, long new_val){
 
   struct llnode * new_node = malloc(sizeof(struct llnode));
   if(new_node == NULL){
+    printf("MALLOC FAILED: %ld\n", new_val);
     return -1;
   }
   new_node->val = new_val;
@@ -323,7 +324,7 @@ int add_llnode(struct llnode * root, long new_val){
   return 0;
 }
 
-int find_val_after(struct llnode * root, long cur_val){
+long find_val_after(struct llnode * root, long cur_val){
   if (root == NULL)
     return -1;
 
@@ -341,23 +342,35 @@ int find_val_after(struct llnode * root, long cur_val){
       return temp->val;
     }
   }
-  return -1;
+  return LONG_MAX;
 
 }
 
 
-int add_reference (struct llnode * refs[]  , int address, long val){
+int add_reference (struct llnode * refs[]  ,unsigned int address, long val){
 
   address =  address >> OFFSET;
-
+  if(address>=MAX_PAGES){
+    printf("what???? %d\n", address);
+    return -1;
+  }
   if(refs[address] == NULL){
+
     struct llnode * new_node = malloc( sizeof(struct llnode) );
+    if(new_node == NULL){
+      printf("MALLOC FAILED: %lu\n",val);
+      return -1;
+    }
     new_node->next = NULL;
     new_node->val = val;
     refs[address]=new_node;
+
     return 0;
   }
-  return add_llnode(refs[address], val);
+
+  add_llnode(refs[address], val);
+
+  return 0;
 
 }
 
@@ -368,7 +381,7 @@ int fill_refs     (struct llnode * refs[]  , FILE * file){
   for(i=0; i<MAX_PAGES; i++){
     refs[i] = NULL;
   }
-
+ 
   long j=0;
   
   int addr;
@@ -377,9 +390,77 @@ int fill_refs     (struct llnode * refs[]  , FILE * file){
   while(fscanf(file, "%x %c", &addr, &mode)==2){
     add_reference(refs, addr, j);
     j++;
+    if(j%5000==0)
+      printf("j=%ld\n",j);   
+  
   }
 
   rewind(file);
   return 0;
 
+}
+
+int opt_alg(int mem[], FILE * file){
+  
+  struct llnode * refs[MAX_PAGES];
+  printf("fill_refs\n");
+  fill_refs(refs, file);
+  printf("end fill_refs\n");
+  int addr;
+  char mode;
+
+  long writes   = 0;
+  long accesses = 0;
+  long faults   = 0;
+  
+  long count = 0;
+  while(fscanf(file, "%x %c", &addr, &mode)==2){
+    int loc = loc_in_mem(mem, addr);
+    if(loc == -1){ //not in mem, let's add it
+      printf("page fault - ");
+      if(faults<num_frames){ //should be empty room!
+        int i;
+        for(i=0; i<num_frames; i++){
+          if(mem[i]==0){
+            replace(mem, i, addr);
+            printf("no evict\n");
+            break;
+          } 
+        }           
+      }
+      else{ //must evict
+        long far = -1;
+        int temp = -1;
+        int j;
+        for(j=0; j<num_frames; j++){
+          int k = find_val_after(refs[mem[j]>>OFFSET], count);
+          if(k>far){
+            far = k;
+            temp = j;
+          }
+        }
+        //evict temp, because it's the fartherst away
+        if(is_dirty(mem, temp)==1){
+          printf("evict dirty\n");
+          writes++;
+        }
+        else{
+          printf("evict clean\n");
+        }
+        replace(mem, temp, addr);
+        
+      } 
+      faults++;   
+    }
+    else{
+      printf("hit\n");
+    }
+    if(mode=='W'||mode=='w'){
+      set_dirty(mem, loc);
+    }
+    count++;
+    
+  }
+  print_results(count, faults, writes);
+  return 0;
 }
