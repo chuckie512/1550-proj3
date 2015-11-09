@@ -18,7 +18,7 @@ int unset_R   (unsigned int mem[], int loc    );
 int get_R     (unsigned int mem[], int loc    );
 
 int opt_alg   (unsigned int mem[], FILE * file); //TODO wtf this segfaults after its done....?
-int nru_alg   (unsigned int mem[], FILE * file); //TODO
+int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); //TODO
 int clock_alg (unsigned int mem[], FILE * file);
 int work_alg  (unsigned int mem[], FILE * file); //TODO
 
@@ -224,7 +224,7 @@ void help(){
 
 
 int clock_alg(unsigned int mem[], FILE * file){
-  int address;
+  unsigned int address;
   char mode;
 
   long faults   = 0;
@@ -478,7 +478,33 @@ int opt_alg(unsigned int mem[], FILE * file){
 }
 
 
-int work_alg  (unsigned int mem[], FILE * file){
+int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   //TODO
+  long accesses = 0;
+  long faults   = 0;
+  long writes   = 0;
+  
+  
+  unsigned int addr;
+  char mode;
+
+  while(fscanf(file, "%x %c", &addr, &mode)==2){
+    accesses++;
+    //TODO refresh Rs
+    int loc = loc_in_mem(mem, addr);
+    if(loc = -1){ //not in mem, PAGE FAULT THIS 
+      printf("page fault - ");
+      faults++;
+      //TODO find what to evict
+    }
+    else{
+      printf("hit\n");
+      set_R(mem, loc);
+    }
+    if(mode == 'W' || mode == 'w'){
+      set_dirty(mem, loc);
+    }
+  }
+  print_results(accesses, faults, writes);
   return 0;
 }
