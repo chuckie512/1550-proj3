@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<limits.h>
+#include<string.h>
 
 #define OFFSET 12
 #define MAX_PAGES 1048575
@@ -169,21 +170,99 @@ if(find_val_after(refs[0], 0) != 5){
 
 
 int main(int argc, char ** argv){
-  num_frames=8;
 
-  FILE* file = fopen("./gcc.trace", "r");
+  if(argc<6){ 
+    help();
+    return 1;
+  }
+  num_frames = -1;
+  int alg=-1;
+  int k;
+  int refresh_rate = 1;
+
+  for(k=1; k<argc-1; k++){
+    if(strcmp(argv[k],"-a")==0){
+      if(k+1>argc-1){
+        help();
+        return 1;
+      }
+      if     (strcmp(argv[k+1],"opt"  )==0){
+        alg = 0;
+      }
+      else if(strcmp(argv[k+1],"clock")==0){
+        alg = 1;
+      }
+      else if(strcmp(argv[k+1],"nru"  )==0){
+        alg = 2;
+      }
+      else if(strcmp(argv[k+1],"work" )==0){
+        alg = 3;
+      }
+      else{
+        printf("wrong alg: %s\n", argv[k+1]);
+        help();
+        return 1;
+      }
+    }
+    else if(strcmp(argv[k],"-n")==0){
+      if(k+1>argc-1){
+        help();
+        return 1;
+      }
+      num_frames = atoi(argv[k+1]);
+    }
+    else if(strcmp(argv[k],"-r")==0){
+      if(k+1>argc-1){
+        help();
+        return 1;
+      }
+      refresh_rate = atoi(argv[k+1]);
+    }
+    else if(strcmp(argv[k], "-t")==0){
+      if(k+1>argc-1){
+        help();
+        return 1;
+      }
+      refresh_rate = atoi(argv[k+1]);
+    }
+  }
+  char * file_name = argv[argc-1];
+  
+  if(num_frames<1){
+    printf("bad num_frames: %d\n", num_frames);
+    help();
+    return 1;
+  }
+  if(alg<0){
+    printf("bad alg: %d\n", alg);
+    help();
+    return 1;
+  }
+  
+  FILE* file = fopen(file_name, "r");
   unsigned int mem[num_frames]; 
   int i;
   for(i=0; i<num_frames; i++)
     mem[i]=0;
-  //int exit = clock_alg(mem,file);
-  //int exit = test(mem);
-  //int exit = opt_alg(mem, file);
-  int exit = nru_alg(mem, file, 10);
+
+  int exit_status=-1;
+ 
+  if     (alg==0)
+    exit_status = opt_alg  (mem, file);
+  else if(alg==1)
+    exit_status = clock_alg(mem,file);
+  else if(alg==2)
+    exit_status = nru_alg  (mem, file, refresh_rate);
+  else if(alg==3)
+    ;
+    //TODO work
+  else
+    exit_status = test(mem);
+  
 
 
 
-  return exit;
+  return exit_status;
 }
 
 
