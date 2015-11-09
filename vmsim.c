@@ -9,24 +9,24 @@ int alg;
 
 
 
-int loc_in_mem(int mem[], int address);
-int set_dirty (int mem[], int loc    );
-int is_dirty  (int mem[], int loc    );
-int replace   (int mem[], int loc,    int address); //TODO add more tests
-int set_R     (int mem[], int loc    );
-int unset_R   (int mem[], int loc    );
-int get_R     (int mem[], int loc    );
+int loc_in_mem(unsigned int mem[], int address);
+int set_dirty (unsigned int mem[], int loc    );
+int is_dirty  (unsigned int mem[], int loc    );
+int replace   (unsigned int mem[], int loc,    int address); //TODO add more tests
+int set_R     (unsigned int mem[], int loc    );
+int unset_R   (unsigned int mem[], int loc    );
+int get_R     (unsigned int mem[], int loc    );
 
-int opt_alg   (unsigned int mem[], FILE * file); //TODO
-int nru_alg   (int mem[], FILE * file); //TODO
-int clock_alg (int mem[], FILE * file); //TODO more prints
-int work_alg  (int mem[], FILE * file); //TODO
+int opt_alg   (unsigned int mem[], FILE * file); //TODO wtf this segfaults after its done....?
+int nru_alg   (unsigned int mem[], FILE * file); //TODO
+int clock_alg (unsigned int mem[], FILE * file);
+int work_alg  (unsigned int mem[], FILE * file); //TODO
 
 
 void print_results(long accesses, long faults, long writes);
 
 void help();
-int test(int mem[]);
+int test(unsigned int mem[]);
 
 struct llnode{
   struct llnode * next;
@@ -39,7 +39,7 @@ unsigned long find_val_after(struct llnode * root, long cur_val);
 int add_reference (struct llnode * refs[]  ,unsigned int address, long val);
 int fill_refs     (struct llnode * refs[]  , FILE * file);
 
-int test(int mem[]){
+int test(unsigned int mem[]){
   int status=0;
 
   printf("===============================================\n");
@@ -160,9 +160,9 @@ int main(int argc, char ** argv){
   int i;
   for(i=0; i<num_frames; i++)
     mem[i]=0;
-  //int exit = clock_alg(mem,file);
+  int exit = clock_alg(mem,file);
   //int exit = test(mem);
-  int exit = opt_alg(mem, file);
+  //int exit = opt_alg(mem, file);
   
 
 
@@ -174,7 +174,7 @@ int main(int argc, char ** argv){
  * returns index if found, -1 otherwise
  *
  */
-int loc_in_mem(int mem[], int address){
+int loc_in_mem(unsigned int mem[], int address){
 
   int found = -1;
   int i;
@@ -190,31 +190,31 @@ int loc_in_mem(int mem[], int address){
 
 }
 
-int set_dirty(int mem[], int loc){
+int set_dirty(unsigned int mem[], int loc){
   mem[loc] |=1;
   return 0;
 }
 
-int is_dirty(int mem[], int loc){
+int is_dirty(unsigned int mem[], int loc){
   return mem[loc]&1;
 }
 
-int replace(int mem[], int loc, int address){
+int replace(unsigned int mem[], int loc, int address){
   mem[loc] = ((address>>OFFSET)<<OFFSET); //last 12 don't matter
   return 0;
 }
 
-int set_R(int mem[], int loc){
+int set_R(unsigned int mem[], int loc){
   mem[loc] |=2;  //second to last bit is 1
   return 0;
 }
 
-int unset_R(int mem[], int loc){
+int unset_R(unsigned int mem[], int loc){
   mem[loc]&=0xFFFFFFFD; //second to last bit is 0
   return 0;
 }
 
-int get_R(int mem[], int loc){
+int get_R(unsigned int mem[], int loc){
   return (mem[loc]&2)>>1;
 }
 
@@ -223,7 +223,7 @@ void help(){
 }
 
 
-int clock_alg(int mem[], FILE * file){
+int clock_alg(unsigned int mem[], FILE * file){
   int address;
   char mode;
 
@@ -246,7 +246,7 @@ int clock_alg(int mem[], FILE * file){
       //here is where we actually put it into memory, b/c it's not there
       faults++;
       printf("page fault - ");
-      //TODO log a no-evict fault as no evict not clean
+     
       //find the evicatable page
       int R = get_R(mem, clock_hand);
       while(R==1){
@@ -263,7 +263,12 @@ int clock_alg(int mem[], FILE * file){
         writes++;
       }
       else{ //it's clean
-        printf("evict clean\n");
+        if(faults<=num_frames){
+          printf("no evict\n");
+        }
+        else{
+          printf("evict clean\n");
+        }
       }
 
       replace(mem, clock_hand, address);
@@ -413,7 +418,6 @@ int opt_alg(unsigned int mem[], FILE * file){
   char mode;
 
   long writes   = 0;
-  long accesses = 0;
   long faults   = 0;
   
   long count = 0;
@@ -470,5 +474,11 @@ int opt_alg(unsigned int mem[], FILE * file){
     
   }
   print_results(count, faults, writes);
+  return 0;
+}
+
+
+int work_alg  (unsigned int mem[], FILE * file){
+  //TODO
   return 0;
 }
