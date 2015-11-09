@@ -179,6 +179,7 @@ int main(int argc, char ** argv){
   int alg=-1;
   int k;
   int refresh_rate = 1;
+  int tao=-1;
 
   for(k=1; k<argc-1; k++){
     if(strcmp(argv[k],"-a")==0){
@@ -223,7 +224,7 @@ int main(int argc, char ** argv){
         help();
         return 1;
       }
-      refresh_rate = atoi(argv[k+1]);
+      tao = atoi(argv[k+1]);
     }
   }
   char * file_name = argv[argc-1];
@@ -235,6 +236,11 @@ int main(int argc, char ** argv){
   }
   if(alg<0){
     printf("bad alg: %d\n", alg);
+    help();
+    return 1;
+  }
+  if(tao<0){
+    printf("bad tao: %d\n", tao);
     help();
     return 1;
   }
