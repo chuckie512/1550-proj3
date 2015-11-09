@@ -22,6 +22,7 @@ int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); //TODO
 int clock_alg (unsigned int mem[], FILE * file);
 int work_alg  (unsigned int mem[], FILE * file); //TODO
 
+int NRU_evict (unsigned int mem[]);
 
 void print_results(long accesses, long faults, long writes);
 
@@ -477,6 +478,25 @@ int opt_alg(unsigned int mem[], FILE * file){
   return 0;
 }
 
+int NRU_evict(unsigned int mem[]){
+  int i;
+  for(i=0; i<num_frames; i++){ //see if there is something unused and clean
+    if(get_R(mem, i)==0&&is_dirty(mem, i)==0 ){
+      return i;
+    }
+  }
+  for(i=0; i<num_frames; i++){ //so there wasn't let's accept a dirty one
+    if(get_R(mem,i)==0){
+      return i;
+    }
+  }
+  for(i=0; i<num_frames; i++){ //ok, anything that is clean
+    if(is_dirty(mem, i)==0){
+      return i;
+    }
+  }
+  return 0; //fuck it, return the first one
+}
 
 int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   //TODO
@@ -487,7 +507,7 @@ int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   
   unsigned int addr;
   char mode;
-
+  
   while(fscanf(file, "%x %c", &addr, &mode)==2){
     accesses++;
     //TODO refresh Rs
@@ -495,7 +515,20 @@ int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
     if(loc = -1){ //not in mem, PAGE FAULT THIS 
       printf("page fault - ");
       faults++;
-      //TODO find what to evict
+      loc = NRU_evict(mem);
+      if(is_dirty(mem, loc)==1){
+        printf("evict dirty\n");
+        writes++;
+      }
+      else{
+        if(faults<=num_frames){
+          printf("no evict\n");
+        }
+        else{
+          printf("evict clean\n");
+        }
+      }
+      replace(mem, loc, addr);
     }
     else{
       printf("hit\n");
