@@ -4,9 +4,9 @@
 
 #define OFFSET 12
 #define MAX_PAGES 1048575
+
+
 int num_frames;
-
-
 
 
 int loc_in_mem(unsigned int mem[], int address);
@@ -17,29 +17,40 @@ int set_R     (unsigned int mem[], int loc    );
 int unset_R   (unsigned int mem[], int loc    );
 int get_R     (unsigned int mem[], int loc    );
 
+
 int opt_alg   (unsigned int mem[], FILE * file); //TODO wtf this segfaults after its done....?
 int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); //TODO
 int clock_alg (unsigned int mem[], FILE * file);
 int work_alg  (unsigned int mem[], FILE * file); //TODO
 
+
 int NRU_evict  (unsigned int mem[]);
 int NRU_refresh(unsigned int mem[]);
 
+
 void print_results(long accesses, long faults, long writes);
 
+
 void help();
+
 int test(unsigned int mem[]);
+
 
 struct llnode{
   struct llnode * next;
   long val;
 };
 
+
 int add_llnode    (struct llnode * root, long new_val);
 unsigned long find_val_after(struct llnode * root, long cur_val);
 
+
 int add_reference (struct llnode * refs[]  ,unsigned int address, long val);
 int fill_refs     (struct llnode * refs[]  , FILE * file);
+
+
+
 
 int test(unsigned int mem[]){
   int status=0;
@@ -154,6 +165,9 @@ if(find_val_after(refs[0], 0) != 5){
 }
 
 
+
+
+
 int main(int argc, char ** argv){
   num_frames=8;
 
@@ -172,6 +186,8 @@ int main(int argc, char ** argv){
   return exit;
 }
 
+
+
 /**
  * returns index if found, -1 otherwise
  *
@@ -188,37 +204,42 @@ int loc_in_mem(unsigned int mem[], int address){
     }
   }
   return found;
-
-
 }
+
 
 int set_dirty(unsigned int mem[], int loc){
   mem[loc] |=1;
   return 0;
 }
 
+
 int is_dirty(unsigned int mem[], int loc){
   return mem[loc]&1;
 }
+
 
 int replace(unsigned int mem[], int loc, int address){
   mem[loc] = ((address>>OFFSET)<<OFFSET); //last 12 don't matter
   return 0;
 }
 
+
 int set_R(unsigned int mem[], int loc){
   mem[loc] |=2;  //second to last bit is 1
   return 0;
 }
+
 
 int unset_R(unsigned int mem[], int loc){
   mem[loc]&=0xFFFFFFFD; //second to last bit is 0
   return 0;
 }
 
+
 int get_R(unsigned int mem[], int loc){
   return (mem[loc]&2)>>1;
 }
+
 
 void help(){
   printf("usage: ./vmsim –n <numframes> -a <opt|clock|nru|work> [-r <refresh>] [-t <tau>] <tracefile>\n");
@@ -331,6 +352,7 @@ int add_llnode(struct llnode * root, long new_val){
   return 0;
 }
 
+
 unsigned long find_val_after(struct llnode * root, long cur_val){
   unsigned long big = LONG_MAX;
 
@@ -353,7 +375,6 @@ unsigned long find_val_after(struct llnode * root, long cur_val){
   }
   
   return big;
-
 }
 
 
@@ -409,6 +430,7 @@ int fill_refs     (struct llnode * refs[]  , FILE * file){
   return 0;
 
 }
+
 
 int opt_alg(unsigned int mem[], FILE * file){
   
@@ -479,6 +501,7 @@ int opt_alg(unsigned int mem[], FILE * file){
   return 0;
 }
 
+
 int NRU_evict(unsigned int mem[]){
   int i;
   for(i=0; i<num_frames; i++){ //see if there is something unused and clean
@@ -499,6 +522,7 @@ int NRU_evict(unsigned int mem[]){
   return 0; //fuck it, return the first one
 }
 
+
 int NRU_refresh(unsigned int mem[]){
   int i;
   for(i=0; i<num_frames; i++){
@@ -506,6 +530,7 @@ int NRU_refresh(unsigned int mem[]){
   }
   return 0;
 }
+
 
 int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   
