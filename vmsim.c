@@ -17,7 +17,7 @@ int set_R     (int mem[], int loc    );
 int unset_R   (int mem[], int loc    );
 int get_R     (int mem[], int loc    );
 
-int opt_alg   (int mem[], FILE * file); //TODO
+int opt_alg   (unsigned int mem[], FILE * file); //TODO
 int nru_alg   (int mem[], FILE * file); //TODO
 int clock_alg (int mem[], FILE * file); //TODO more prints
 int work_alg  (int mem[], FILE * file); //TODO
@@ -34,7 +34,7 @@ struct llnode{
 };
 
 int add_llnode    (struct llnode * root, long new_val);
-long find_val_after(struct llnode * root, long cur_val);
+unsigned long find_val_after(struct llnode * root, long cur_val);
 
 int add_reference (struct llnode * refs[]  ,unsigned int address, long val);
 int fill_refs     (struct llnode * refs[]  , FILE * file);
@@ -104,7 +104,7 @@ int test(int mem[]){
   add_llnode(test_root, 200); 
 
   if(find_val_after(test_root, 0) != 5){
-    printf("TEST[4]: FAIL the next val should be 5 but instead is %d\n", find_val_after(test_root, 0) );
+    printf("TEST[4]: FAIL the next val should be 5 but instead is %lu\n", find_val_after(test_root, 0) );
     status-=1;
   }
   else{
@@ -112,7 +112,7 @@ int test(int mem[]){
   }
 
   if(find_val_after(test_root, 5) !=6 ){
-    printf("TEST[5]: FAIL the next val should be 6 but instead is %d\n", find_val_after(test_root, 5) );
+    printf("TEST[5]: FAIL the next val should be 6 but instead is %lu\n", find_val_after(test_root, 5) );
     status-=1;
   }
   else{
@@ -129,7 +129,7 @@ int test(int mem[]){
   add_reference(refs, 0 , 200);
   
 if(find_val_after(refs[0], 0) != 5){
-    printf("TEST[6]: FAIL the next val should be 5 but instead is %d\n", find_val_after(test_root, 0) );
+    printf("TEST[6]: FAIL the next val should be 5 but instead is %lu\n", find_val_after(test_root, 0) );
     status-=1;
   }
   else{
@@ -137,7 +137,7 @@ if(find_val_after(refs[0], 0) != 5){
   }
 
   if(find_val_after(refs[0], 5) !=6 ){
-    printf("TEST[7]: FAIL the next val should be 6 but instead is %d\n", find_val_after(test_root, 5) );
+    printf("TEST[7]: FAIL the next val should be 6 but instead is %lu\n", find_val_after(test_root, 5) );
     status-=1;
   }
   else{
@@ -156,7 +156,7 @@ int main(int argc, char ** argv){
   num_frames=8;
 
   FILE* file = fopen("./gcc.trace", "r");
-  int mem[num_frames]; 
+  unsigned int mem[num_frames]; 
   int i;
   for(i=0; i<num_frames; i++)
     mem[i]=0;
@@ -324,9 +324,11 @@ int add_llnode(struct llnode * root, long new_val){
   return 0;
 }
 
-long find_val_after(struct llnode * root, long cur_val){
+unsigned long find_val_after(struct llnode * root, long cur_val){
+  unsigned long big = LONG_MAX;
+
   if (root == NULL)
-    return -1;
+    return big;
 
   struct llnode * temp;
 
@@ -342,7 +344,8 @@ long find_val_after(struct llnode * root, long cur_val){
       return temp->val;
     }
   }
-  return LONG_MAX;
+  
+  return big;
 
 }
 
@@ -400,7 +403,7 @@ int fill_refs     (struct llnode * refs[]  , FILE * file){
 
 }
 
-int opt_alg(int mem[], FILE * file){
+int opt_alg(unsigned int mem[], FILE * file){
   
   struct llnode * refs[MAX_PAGES];
   printf("fill_refs\n");
@@ -429,12 +432,14 @@ int opt_alg(int mem[], FILE * file){
         }           
       }
       else{ //must evict
-        long far = -1;
+        unsigned long far = 0;
         int temp = -1;
         int j;
+        int k;
         for(j=0; j<num_frames; j++){
-          int k = find_val_after(refs[mem[j]>>OFFSET], count);
-          if(k>far){
+          k = find_val_after(refs[mem[j]>>OFFSET], count);
+          printf("k is: %d\n",k);
+          if(k>=far){
             far = k;
             temp = j;
           }
@@ -447,7 +452,10 @@ int opt_alg(int mem[], FILE * file){
         else{
           printf("evict clean\n");
         }
+        printf("on the %ld requst evicted frame = %d whose next use is %ld, and is storing: %d", count, temp, far,mem[temp]);
+
         replace(mem, temp, addr);
+
         
       } 
       faults++;   
