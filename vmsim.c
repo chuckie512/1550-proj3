@@ -5,7 +5,7 @@
 #define OFFSET 12
 #define MAX_PAGES 1048575
 int num_frames;
-int alg;
+
 
 
 
@@ -22,7 +22,8 @@ int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); //TODO
 int clock_alg (unsigned int mem[], FILE * file);
 int work_alg  (unsigned int mem[], FILE * file); //TODO
 
-int NRU_evict (unsigned int mem[]);
+int NRU_evict  (unsigned int mem[]);
+int NRU_refresh(unsigned int mem[]);
 
 void print_results(long accesses, long faults, long writes);
 
@@ -161,10 +162,10 @@ int main(int argc, char ** argv){
   int i;
   for(i=0; i<num_frames; i++)
     mem[i]=0;
-  int exit = clock_alg(mem,file);
+  //int exit = clock_alg(mem,file);
   //int exit = test(mem);
   //int exit = opt_alg(mem, file);
-  
+  int exit = nru_alg(mem, file, 10);
 
 
 
@@ -498,8 +499,16 @@ int NRU_evict(unsigned int mem[]){
   return 0; //fuck it, return the first one
 }
 
+int NRU_refresh(unsigned int mem[]){
+  int i;
+  for(i=0; i<num_frames; i++){
+    unset_R(mem, i);
+  }
+  return 0;
+}
+
 int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
-  //TODO
+  
   long accesses = 0;
   long faults   = 0;
   long writes   = 0;
@@ -510,9 +519,11 @@ int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   
   while(fscanf(file, "%x %c", &addr, &mode)==2){
     accesses++;
-    //TODO refresh Rs
+    if(accesses % refresh_rate == 0){
+      NRU_refresh(mem);
+    }
     int loc = loc_in_mem(mem, addr);
-    if(loc = -1){ //not in mem, PAGE FAULT THIS 
+    if(loc == -1){ //not in mem, PAGE FAULT THIS 
       printf("page fault - ");
       faults++;
       loc = NRU_evict(mem);
