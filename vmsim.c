@@ -17,12 +17,12 @@ int replace   (unsigned int mem[], int loc,    int address); //TODO add more tes
 int set_R     (unsigned int mem[], int loc    );
 int unset_R   (unsigned int mem[], int loc    );
 int get_R     (unsigned int mem[], int loc    );
-
+int set_clean (unsigned int mem[], int loc    );
 
 int opt_alg   (unsigned int mem[], FILE * file); //TODO wtf this segfaults after its done....?
-int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); //TODO
+int nru_alg   (unsigned int mem[], FILE * file, int refresh_rate); 
 int clock_alg (unsigned int mem[], FILE * file);
-int work_alg  (unsigned int mem[], FILE * file); //TODO
+int work_alg  (unsigned int mem[], FILE * file, int refresh, int tao); //TODO
 
 
 int NRU_evict  (unsigned int mem[]);
@@ -179,7 +179,7 @@ int main(int argc, char ** argv){
   int alg=-1;
   int k;
   int refresh_rate = 1;
-  int tao=-1;
+  int tao=1;
 
   for(k=1; k<argc-1; k++){
     if(strcmp(argv[k],"-a")==0){
@@ -254,19 +254,16 @@ int main(int argc, char ** argv){
   int exit_status=-1;
  
   if     (alg==0)
-    exit_status = opt_alg  (mem, file);
+    exit_status = opt_alg  (mem, file              );
   else if(alg==1)
-    exit_status = clock_alg(mem,file);
+    exit_status = clock_alg(mem, file              );
   else if(alg==2)
     exit_status = nru_alg  (mem, file, refresh_rate);
   else if(alg==3)
-    ;
-    //TODO work
+    exit_status = work_alg (mem, file, refresh_rate, tao);
   else
     exit_status = test(mem);
   
-
-
 
   return exit_status;
 }
@@ -300,6 +297,12 @@ int set_dirty(unsigned int mem[], int loc){
 
 int is_dirty(unsigned int mem[], int loc){
   return mem[loc]&1;
+}
+
+
+int set_clean(unsigned int mem[], int loc){
+  mem[loc]&=0xFFFFFFFE; //last bit is 0
+  return 0;
 }
 
 
@@ -662,3 +665,92 @@ int nru_alg  (unsigned int mem[], FILE * file, int refresh_rate){
   print_results(accesses, faults, writes);
   return 0;
 }
+
+
+int work_alg(unsigned int mem[], FILE * file, int refresh, int tao){
+  //TODO
+  unsigned int addr;
+  char mode;
+  long faults   = 0;
+  long accesses = 0;
+  long writes   = 0;
+  unsigned long time[num_frames];
+  int i;
+  int point = 0;
+
+  for(i=0; i<num_frames; i++){
+    time[num_frames]=0;
+  }
+  
+  while(fscanf(file, "%x %c", &addr, &mode)==2){
+    accesses++;
+    if(accesses % refresh == 0){
+      //refresh point
+      NRU_refresh(mem);
+    }
+    int loc = loc_in_mem(mem, addr);
+    if(loc==-1){ //page fault
+      faults++;
+      printf("page fault - ");  
+      
+      int k;
+      for(k=0; k<num_frames*2; k++){
+        if(accesses-time[point]>tao){//not part of working set
+          if(is_dirty(mem, point)==0){ //is clean
+            loc = point;
+            break;
+          }
+          else{ // it's dirty
+            set_clean(mem, point);
+            writes++;
+          }
+          point++;
+          point = point % num_frames;
+        }
+      }
+      if(loc==-1){ //nothing older than tao, evict oldest
+        int l;
+        int rep_loc=0;
+        unsigned long min = 0xFFFFFFFF;
+        for(l=0; l<num_frames; l++){
+          if(time[l]<min){
+            min = time[l];
+            rep_loc=l;
+          }
+        }
+        loc = rep_loc;
+      }
+      
+      if(is_dirty(mem,loc)==1){
+        printf("evict dirty\n");
+        writes++;
+      }
+      else{
+        if(faults<=num_frames){
+          printf("no evict\n");
+        }
+        else{
+          printf("evict clean\n");
+        }
+      }
+      replace(mem, loc, addr);
+      
+    }
+    else{
+      printf("hit\n");
+    }
+    if(mode == 'w'|| mode == 'W'){
+      set_dirty(mem, loc);
+    }
+    time[loc]=accesses;    
+  }
+
+
+
+
+  print_results(accesses, faults, writes);
+
+  return 0;
+}
+
+
