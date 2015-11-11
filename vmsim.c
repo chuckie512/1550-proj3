@@ -554,7 +554,7 @@ int opt_alg(unsigned int mem[], FILE * file){
         int k;
         for(j=0; j<num_frames; j++){
           k = find_val_after(refs[mem[j]>>OFFSET], count);
-          printf("k is: %d\n",k);
+          //printf("k is: %d\n",k);
           if(k>=far){
             far = k;
             temp = j;
@@ -568,7 +568,7 @@ int opt_alg(unsigned int mem[], FILE * file){
         else{
           printf("evict clean\n");
         }
-        printf("on the %ld requst evicted frame = %d whose next use is %ld, and is storing: %d", count, temp, far,mem[temp]);
+        printf("on the %ld requst evicted frame = %d whose next use is %ld, and is storing: %d\n", count, temp, far,mem[temp]);
 
         replace(mem, temp, addr);
 
