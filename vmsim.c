@@ -690,6 +690,12 @@ int work_alg(unsigned int mem[], FILE * file, int refresh, int tao){
     }
     int loc = loc_in_mem(mem, addr);
     if(loc==-1){ //page fault
+      int z;
+      for(z=0; z<num_frames; z++){
+        if(get_R(mem, z)== 1){
+          time[z]=accesses;
+        }
+      }
       faults++;
       printf("page fault - ");  
       
@@ -742,7 +748,7 @@ int work_alg(unsigned int mem[], FILE * file, int refresh, int tao){
     if(mode == 'w'|| mode == 'W'){
       set_dirty(mem, loc);
     }
-    time[loc]=accesses;    
+    set_R(mem, loc);
   }
 
 
